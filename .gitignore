@@ -1,0 +1,33 @@
+# Binários compilados
+/bin/
+/pkg/
+
+# Arquivos de saída de testes
+*.test
+*.out
+
+# Diretório de dependências
+/vendor/
+
+# Arquivos de cobertura
+*.cover
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Diretórios de configuração do editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de log
+*.log
+
+# Arquivos gerados pelo sistema de módulos Go
+go.sum
+!go.mod
+
+# Pastas de cache locais
+.gocache/
