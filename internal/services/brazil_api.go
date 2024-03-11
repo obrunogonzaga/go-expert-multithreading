@@ -24,7 +24,7 @@ type BrazilApiCEP struct {
 }
 
 func GetCepInBrazilAPI() (*BrazilApiCEP, error) {
-	res, err := http.Get("https://brasilapi.com.br/api/cep/v1/01153000")
+	res, err := http.Get("https://brasilapi.com.br/api/cep/v1/80320310")
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -37,10 +37,7 @@ func GetCepInBrazilAPI() (*BrazilApiCEP, error) {
 		return nil, err
 	}
 
-	log.Println(string(body))
-
 	var cep BrazilApiCEP
 	err = json.Unmarshal(body, &cep)
 	return &cep, err
-
 }

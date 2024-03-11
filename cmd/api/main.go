@@ -3,26 +3,80 @@ package main
 import (
 	"github.com/obrunogonzaga/go-expert-multithreading/internal/services"
 	"log"
+	"time"
 )
 
-type ViaCepApi struct {
-	Bairro      string `json:"bairro"`
-	Cep         string `json:"cep"`
-	Complemento string `json:"complemento"`
-	Ddd         string `json:"ddd"`
-	Gia         string `json:"gia"`
-	Ibge        string `json:"ibge"`
-	Localidade  string `json:"localidade"`
-	Logradouro  string `json:"logradouro"`
-	Siafi       string `json:"siafi"`
-	Uf          string `json:"uf"`
+type Address struct {
+	cep         string
+	logradouro  string
+	complemento string
+	bairro      string
+	localidade  string
+	uf          string
 }
 
 func main() {
-	cep, err := services.GetCepInBrazilAPI()
-	if err != nil {
-		log.Println(err)
-		return
+
+	address := Address{}
+	brazilApiChannel := make(chan Address)
+	ViaCepChannel := make(chan Address)
+	done := make(chan bool)
+	//errChannel := make(chan error)
+
+	go func() {
+		cep, err := services.GetCepInBrazilAPI()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		select {
+		case <-done:
+			return
+		default:
+			address.cep = cep.Cep
+			address.logradouro = cep.Street
+			address.bairro = cep.Neighborhood
+			address.localidade = cep.City
+			address.uf = cep.State
+
+			brazilApiChannel <- address
+		}
+	}()
+
+	go func() {
+		viaCep, err := services.GetCepInViaCepAPI()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		select {
+		case <-done:
+			return
+		default:
+			address.cep = viaCep.Cep
+			address.logradouro = viaCep.Logradouro
+			address.complemento = viaCep.Complemento
+			address.bairro = viaCep.Bairro
+			address.localidade = viaCep.Localidade
+			address.uf = viaCep.Uf
+
+			ViaCepChannel <- address
+		}
+	}()
+
+	select {
+	case address := <-brazilApiChannel:
+		log.Printf("Received from BrazilAPI: %+v\n", address)
+		close(done)
+
+	case address := <-ViaCepChannel:
+		log.Printf("Received from ViaCep: %+v\n", address)
+		close(done)
+
+	case <-time.After(1 * time.Second):
+		println("Timeout BrazilAPI and ViaCep")
 	}
-	log.Println(cep)
+
 }
